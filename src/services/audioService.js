@@ -1,10 +1,12 @@
-// Audio Service - Handles microphone access and audio recording
+// Handles microphone access and audio recording
 class AudioService {
     constructor() {
         this.mediaRecorder = null;
         this.audioStream = null;
         this.audioChunks = [];
         this.isRecording = false;
+        this.audioBuffer = [];
+        this.bufferSize = 4096;
     }
 
     async requestMicrophoneAccess() {
@@ -29,6 +31,7 @@ class AudioService {
         }
 
         this.audioChunks = [];
+        this.audioBuffer = [];
         this.mediaRecorder = new MediaRecorder(this.audioStream);
 
         this.mediaRecorder.ondataavailable = (event) => {
@@ -54,6 +57,26 @@ class AudioService {
         return [];
     }
 
+    // Convert audio blob to ArrayBuffer for Deepgram
+    async blobToArrayBuffer(blob) {
+        return await blob.arrayBuffer();
+    }
+
+    // Convert audio data to base64 for transmission
+    async blobToBase64(blob) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result.split(',')[1]);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+    }
+
+    // Get audio stream for direct processing
+    getAudioStream() {
+        return this.audioStream;
+    }
+
     releaseMicrophone() {
         if (this.audioStream) {
             this.audioStream.getTracks().forEach(track => track.stop());
@@ -63,3 +86,4 @@ class AudioService {
 }
 
 export default AudioService;
+
