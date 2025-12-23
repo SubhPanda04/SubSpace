@@ -12,6 +12,7 @@ export const useAudioRecorder = () => {
         audioServiceRef.current = new AudioService();
     }
 
+    // Cleanup on unmount
     useEffect(() => {
         return () => {
             if (audioServiceRef.current) {
@@ -46,6 +47,9 @@ export const useAudioRecorder = () => {
     const stopRecording = useCallback(() => {
         const chunks = audioServiceRef.current.stopRecording();
         setIsRecording(false);
+        // Release microphone immediately to force permission request on next recording
+        audioServiceRef.current.releaseMicrophone();
+        setHasPermission(false);
         return chunks;
     }, []);
 
