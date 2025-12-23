@@ -1,7 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import DeepgramService from '../services/deepgramService';
 
-// Hook for managing Deepgram transcription
 export const useDeepgram = (apiKey) => {
     const [transcript, setTranscript] = useState('');
     const [interimTranscript, setInterimTranscript] = useState('');
@@ -16,6 +15,7 @@ export const useDeepgram = (apiKey) => {
     const connect = useCallback(async () => {
         if (!deepgramServiceRef.current) {
             setError('Deepgram service not initialized. API key required.');
+            console.error('[useDeepgram] No Deepgram service instance');
             return false;
         }
 
@@ -29,6 +29,7 @@ export const useDeepgram = (apiKey) => {
         };
 
         const handleError = (err) => {
+            console.error('[useDeepgram] handleError called:', err);
             setError(err);
             setIsConnected(false);
         };
@@ -37,7 +38,7 @@ export const useDeepgram = (apiKey) => {
         setIsConnected(success);
         setError(null);
         return success;
-    }, [apiKey]);
+    }, []);
 
     const sendAudio = useCallback((audioData) => {
         if (deepgramServiceRef.current) {
