@@ -1,4 +1,3 @@
-// Handles microphone access and audio recording
 class AudioService {
     constructor() {
         this.mediaRecorder = null;
@@ -32,7 +31,18 @@ class AudioService {
 
         this.audioChunks = [];
         this.audioBuffer = [];
-        this.mediaRecorder = new MediaRecorder(this.audioStream);
+
+        let options = {};
+        const mimeTypes = ['audio/webm', 'audio/webm;codecs=opus', 'audio/ogg;codecs=opus'];
+
+        for (const mimeType of mimeTypes) {
+            if (MediaRecorder.isTypeSupported(mimeType)) {
+                options = { mimeType };
+                break;
+            }
+        }
+
+        this.mediaRecorder = new MediaRecorder(this.audioStream, options);
 
         this.mediaRecorder.ondataavailable = (event) => {
             if (event.data.size > 0) {
@@ -43,7 +53,6 @@ class AudioService {
             }
         };
 
-        // Collect data every 100ms for real-time streaming
         this.mediaRecorder.start(100);
         this.isRecording = true;
     }
@@ -72,7 +81,6 @@ class AudioService {
         });
     }
 
-    // Get audio stream for direct processing
     getAudioStream() {
         return this.audioStream;
     }
