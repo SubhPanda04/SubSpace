@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import AudioService from '../services/audioService';
 
 // Custom hook for managing audio recording state
@@ -8,10 +8,17 @@ export const useAudioRecorder = () => {
     const [error, setError] = useState(null);
     const audioServiceRef = useRef(null);
 
-    // Initialize audio service
     if (!audioServiceRef.current) {
         audioServiceRef.current = new AudioService();
     }
+
+    useEffect(() => {
+        return () => {
+            if (audioServiceRef.current) {
+                audioServiceRef.current.releaseMicrophone();
+            }
+        };
+    }, []);
 
     const requestPermission = useCallback(async () => {
         try {
