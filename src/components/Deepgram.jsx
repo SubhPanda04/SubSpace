@@ -7,6 +7,7 @@ const Deepgram = () => {
     const [totalDuration, setTotalDuration] = useState(0);
     const [showCopied, setShowCopied] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [showPermissionDialog, setShowPermissionDialog] = useState(false);
     const apiKey = import.meta.env.VITE_DEEPGRAM_API_KEY;
 
     const {
@@ -48,21 +49,30 @@ const Deepgram = () => {
         return () => clearInterval(interval);
     }, [isRecording]);
 
-    const handleStartRecording = async () => {
-        if (!hasPermission) {
-            const granted = await requestPermission();
-            if (!granted || !isConnected) {
-                return;
-            }
-        }
+    const handleRecordButtonClick = () => {
+        // Show custom permission dialog
+        setShowPermissionDialog(true);
+    };
+
+    const handlePermissionAllow = async () => {
+        setShowPermissionDialog(false);
 
         if (!isConnected) {
+            return;
+        }
+
+        const granted = await requestPermission();
+        if (!granted) {
             return;
         }
 
         startRecording((audioData) => {
             sendAudio(audioData);
         });
+    };
+
+    const handlePermissionDeny = () => {
+        setShowPermissionDialog(false);
     };
 
     const handleStopRecording = () => {
@@ -156,8 +166,8 @@ const Deepgram = () => {
                             <div className="relative">
                                 {!isRecording ? (
                                     <button
-                                        onClick={handleStartRecording}
-                                        disabled={!isConnected && hasPermission}
+                                        onClick={handleRecordButtonClick}
+                                        disabled={!isConnected}
                                         className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 hover:from-purple-400 hover:to-blue-400 disabled:from-white/10 disabled:to-white/10 shadow-xl shadow-purple-500/30 hover:shadow-purple-500/50 hover:scale-105 disabled:shadow-none transition-all duration-300 ease-out flex items-center justify-center group"
                                     >
                                         <div className="w-6 h-6 rounded-full bg-white group-disabled:bg-white/30 transition-all duration-200 pointer-events-none"></div>
@@ -224,6 +234,39 @@ const Deepgram = () => {
                         )}
                     </div>
                 </div>
+
+                {/* Custom Permission Dialog */}
+                {showPermissionDialog && (
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-200">
+                        <div className="backdrop-blur-2xl bg-white/[0.08] border border-white/[0.15] rounded-2xl p-8 max-w-md mx-4 shadow-2xl shadow-black/40 animate-in zoom-in-95 duration-200">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-12 h-12 rounded-full bg-purple-500/20 border border-purple-500/30 flex items-center justify-center">
+                                    <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                                    </svg>
+                                </div>
+                                <h3 className="text-white text-lg font-medium">Microphone Access</h3>
+                            </div>
+                            <p className="text-white/70 text-sm mb-6 leading-relaxed">
+                                Wispr needs access to your microphone to record and transcribe your voice. Your audio is processed securely and never stored.
+                            </p>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={handlePermissionDeny}
+                                    className="flex-1 px-4 py-3 rounded-xl bg-white/[0.08] hover:bg-white/[0.12] border border-white/[0.08] text-white/90 text-sm font-medium transition-all duration-200"
+                                >
+                                    Deny
+                                </button>
+                                <button
+                                    onClick={handlePermissionAllow}
+                                    className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 hover:from-purple-400 hover:to-blue-400 text-white text-sm font-medium shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 transition-all duration-200"
+                                >
+                                    Allow
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
