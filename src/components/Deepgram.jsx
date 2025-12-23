@@ -8,6 +8,7 @@ const Deepgram = () => {
     const [showCopied, setShowCopied] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [showPermissionDialog, setShowPermissionDialog] = useState(false);
+    const [sessionPermissionGranted, setSessionPermissionGranted] = useState(false);
     const apiKey = import.meta.env.VITE_DEEPGRAM_API_KEY;
 
     const {
@@ -49,13 +50,30 @@ const Deepgram = () => {
         return () => clearInterval(interval);
     }, [isRecording]);
 
-    const handleRecordButtonClick = () => {
-        // Show custom permission dialog
-        setShowPermissionDialog(true);
+    const handleRecordButtonClick = async () => {
+        // If permission already granted in this session, start recording directly
+        if (sessionPermissionGranted) {
+            if (!isConnected) {
+                return;
+            }
+
+            const granted = await requestPermission();
+            if (!granted) {
+                return;
+            }
+
+            startRecording((audioData) => {
+                sendAudio(audioData);
+            });
+        } else {
+            // First time in this session - show permission dialog
+            setShowPermissionDialog(true);
+        }
     };
 
     const handlePermissionAllow = async () => {
         setShowPermissionDialog(false);
+        setSessionPermissionGranted(true); // Remember permission for this session
 
         if (!isConnected) {
             return;
@@ -73,6 +91,7 @@ const Deepgram = () => {
 
     const handlePermissionDeny = () => {
         setShowPermissionDialog(false);
+        // Don't set sessionPermissionGranted - will ask again next click
     };
 
     const handleStopRecording = () => {

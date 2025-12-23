@@ -47,9 +47,7 @@ export const useAudioRecorder = () => {
     const stopRecording = useCallback(() => {
         const chunks = audioServiceRef.current.stopRecording();
         setIsRecording(false);
-        // Release microphone immediately to force permission request on next recording
-        audioServiceRef.current.releaseMicrophone();
-        setHasPermission(false);
+        // Keep microphone access for this session - don't release
         return chunks;
     }, []);
 
